@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -6,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>设计百宝库 - Design Treasure</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS (via CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -21,7 +20,7 @@
                 200: '#FFCD99',
                 300: '#FFB05C',
                 400: '#FF992E',
-                500: '#FF8C19', // Brand Orange
+                500: '#FF8C19', 
                 600: '#E67300', 
                 700: '#CC6000',
                 800: '#A34D00',
@@ -84,16 +83,6 @@
 
     <!-- Load Data First -->
     <script src="data.js"></script>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://aistudiocdn.com/react@^19.2.1",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0"
-  }
-}
-</script>
 <link rel="stylesheet" href="/index.css">
 </head>
 <body class="antialiased text-gray-900 dark:text-gray-100 selection:bg-primary-500 selection:text-white">
@@ -113,7 +102,10 @@
 
     <script type="text/babel">
         const { useState, useMemo, useRef, useEffect } = React;
-        const { BANNER_CONFIG, CATEGORIES, MOCK_AI_PROMPTS, MOCK_FONTS, MOCK_SOFTWARE, MOCK_TOOLS, MOCK_ASSETS } = window.APP_DATA || {};
+        
+        // Ensure data is loaded
+        const APP_DATA = window.APP_DATA || { BANNER_CONFIG: {}, CATEGORIES: {} };
+        const { BANNER_CONFIG, CATEGORIES, MOCK_AI_PROMPTS, MOCK_FONTS, MOCK_SOFTWARE, MOCK_TOOLS, MOCK_ASSETS } = APP_DATA;
 
         // Icons (Defined Inline to avoid Import issues locally)
         const Icons = {
@@ -496,15 +488,18 @@
                 if (isOpen) window.addEventListener('keydown', handleEsc);
                 return () => window.removeEventListener('keydown', handleEsc);
             }, [isOpen, onClose]);
+            
             if (!isOpen || !imageUrl) return null;
+            
             return (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-2xl animate-in fade-in duration-300" onClick={onClose}>
-                    <div className="absolute top-6 right-6">
-                        <button onClick={onClose} className="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors backdrop-blur-md border border-white/20"><Icons.X size={24} /></button>
-                    </div>
-                    <div className="relative max-w-[90vw] max-h-[90vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-                        <img src={imageUrl} alt="Enlarged preview" className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl" />
-                    </div>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300" onClick={onClose}>
+                    <button onClick={onClose} className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors backdrop-blur-md border border-white/20 z-10"><Icons.X size={24} /></button>
+                    <img 
+                        src={imageUrl} 
+                        alt="Enlarged preview" 
+                        className="max-w-full max-h-[90vh] w-auto h-auto object-contain rounded-lg shadow-2xl cursor-zoom-out"
+                        onClick={(e) => e.stopPropagation()} 
+                    />
                 </div>
             );
         };
@@ -596,9 +591,35 @@
                 );
             };
 
-            const root = ReactDOM.createRoot(document.getElementById('root'));
-            root.render(<App />);
+            return (
+                <div className="min-h-screen font-sans text-gray-900 dark:text-gray-100 pb-24 md:pb-10">
+                    <TopNavigationBar currentView={currentView} onViewChange={handleViewChange} isDark={isDark} toggleTheme={toggleTheme} onSearch={handleSearch} searchQuery={searchQuery} />
+                    <MobileNav currentView={currentView} onViewChange={handleViewChange} />
+
+                    <main className="max-w-[1800px] mx-auto pt-24 md:pt-32 px-4 md:px-8">
+                        <HeroSection 
+                            currentView={currentView} 
+                            banner={banner} 
+                        />
+                        
+                        <CategoryBar 
+                            categories={currentCategories} 
+                            activeCategory={activeCategory} 
+                            onSelect={handleCategoryClick} 
+                        />
+                        
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            {renderContent()}
+                        </div>
+                    </main>
+
+                    <ImageViewer isOpen={!!enlargedImage} imageUrl={enlargedImage} onClose={() => setEnlargedImage(null)} />
+                </div>
+            );
         };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 <script type="module" src="/index.tsx"></script>
 </body>
